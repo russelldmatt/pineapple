@@ -1,6 +1,6 @@
 from collections import Counter
+from level import Level
 import card
-import play
 from enum import IntEnum
 
 def aces_as_low(card_values):
@@ -8,6 +8,9 @@ def aces_as_low(card_values):
 
 def card_values(cards): 
     return [ card.value(c) for c in cards ]
+
+def sorted_card_values_highest_first(cards):
+    return sorted(card_values(cards), reverse = True)
 
 def card_value_counts(cards): 
     return dict(Counter(card_values(cards)))
@@ -22,9 +25,12 @@ def is_two_pair(cards):
     counts = card_value_counts(cards)
     return Counter(counts.values())[2] == 2
 
+def sorted_pair_values_highest_first(cards):
+    return sorted([ v for (v, c) in card_value_counts(cards).iteritems() if c == 2 ], reverse = True)
+
 def highest_pair_value(cards):
-    pairs = [ v for (v, c) in card_value_counts(cards).iteritems() if c == 2 ]
-    return max(pairs) if pairs else None
+    pairs = sorted_pair_values_highest_first(cards)
+    return pairs[0] if pairs else None
 
 def is_trips(cards):
     return 3 in set(card_value_counts(cards).values())
@@ -48,6 +54,10 @@ def is_full_house(cards):
 
 def is_quads(cards):
     return 4 in set(card_value_counts(cards).values())
+
+def quads_value(cards):
+    quads = [ v for (v, c) in card_value_counts(cards).iteritems() if c == 4 ]
+    return max(quads) if quads else None
 
 def is_straight_flush(cards): 
     return is_flush(cards) and is_straight(cards)
@@ -74,23 +84,52 @@ def classify_hand(cards):
     else:
         return any_length(cards)
 
-def test():
-    # CR mrussell: try out unittest
-    full_house = ['9h','9d','9c', '8d', '8c']
-    two_pair = ['9h','9d','11c', '8d', '8c']
-    print "is_pair:", is_pair(['9h','9d','9c', '8d', '8c'])
-    print "is_two_pair:", is_two_pair(full_house) # is false - should I change that?
-    print "is_two_pair:", is_two_pair(two_pair) # is false - should I change that?
-    print "hand:", classify_hand(full_house)
-    print "hand:", classify_hand(two_pair)
-    print "is_trips:", is_trips(['9h','9d','9c', '8d', '8c'])
-    print "is_straight:", is_straight(['9h', '10h', '11h'])
-    print "is_straight:", is_straight(['13h', '12h', '1h'])
-    print "is_full_house:", is_full_house(['9h','9d','9c', '8d', '8c'])
-    print "is_full_house:", is_full_house(['10h','9d','9c', '8d', '8c'])
-    print "is_royal_flush:", is_royal_flush(['10h','11h','12h', '13h', '1h'])
+tie_breaker_value_functions = {
+    Hand.Nothing       : [sorted_card_values_highest_first],
+    Hand.Pair          : [highest_pair_value, sorted_card_values_highest_first],
+    Hand.TwoPair       : [sorted_pair_values_highest_first, sorted_card_values_highest_first],
+    Hand.Trips         : [trips_value, sorted_card_values_highest_first],
+    Hand.Straight      : [sorted_card_values_highest_first],
+    Hand.Flush         : [sorted_card_values_highest_first],
+    Hand.FullHouse     : [trips_value, highest_pair_value],
+    Hand.Quads         : [quads_value, sorted_card_values_highest_first],
+    Hand.StraightFlush : [sorted_card_values_highest_first],
+    Hand.RoyalFlush    : [sorted_card_values_highest_first],
+}
 
-test()
+def compare_hands_with_fun(cards1, cards2, value_fun):
+    cards1_value = value_fun(cards1) 
+    cards2_value = value_fun(cards2) 
+    if cards1_value > cards2_value: 
+        return 1
+    elif cards2_value > cards1_value: 
+        return -1
+    else: 
+        return 0
+
+def compare_hands_waterfall(cards1, cards2, value_functions):
+    if len(value_functions) == 0: 
+        return 0
+    else:
+        return (compare_hands_with_fun(cards1, cards2, value_functions[0]) 
+                or compare_hands_waterfall(cards1, cards2, value_functions[1:])
+        )
+
+def compare_hands(cards1, cards2): 
+    hand1 = classify_hand(cards1)
+    hand2 = classify_hand(cards2)
+    if hand1 > hand2: 
+        return 1
+    elif hand2 > hand1:
+        return -1
+    elif hand1 == hand2: 
+        tie_breakers = tie_breaker_value_functions[hand1]
+        return compare_hands_waterfall(cards1, cards2, tie_breakers)
+    else: 
+        assert(False)
+
+def is_better(cards, than_cards):
+    return compare_hands(cards, than_cards) > 0
 
 bottom_scores = { 
     Hand.RoyalFlush : 25,
@@ -135,10 +174,10 @@ def score_top(cards):
     return top_scores[hand](cards) if hand in top_scores else 0
 
 score_by_level = { 
-    play.Level.bottom : score_bottom,
-    play.Level.middle : score_middle,
-    play.Level.top : score_top,
+    Level.bottom : score_bottom,
+    Level.middle : score_middle,
+    Level.top : score_top,
 }
 
-def score(cards, level): return score_by_level[level](cards)
+def score_level(cards, level): return score_by_level[level](cards)
 
