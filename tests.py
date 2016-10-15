@@ -32,16 +32,17 @@ score_tests()
 p = play.create(full_house, two_pair, two_pair)
 print play.is_valid(p)
 
-cards = card.n_random_cards(14)
+def test_fantasy_land():
+    cards = card.n_random_cards(14)
 
-# override
-cards_human = ['As', 'Ah', 'Ad', 'Kh', 'Js', '10h', '9c','9d','8c','7s','7c','6s','4s','4d'] 
-cards = [ card.of_human(c) for c in cards_human ]
+    # override
+    cards_human = ['As', 'Ah', 'Ad', 'Kh', 'Js', '10h', '9c', '9d', '8c', '7s', '7c', '6s', '4s', '4d'] 
+    cards = [ card.of_human(c) for c in cards_human ]
 
-print "Testing fantasy_land best play:"
-print cards
-(best_p, best_score) = fantasy_land.best_play(cards)
-print "Best play:"
-play.pp(best_p)
-print "Best score:", best_score
+    print "Testing fantasy_land best play:"
+    print cards
+    (best_p, best_score) = fantasy_land.best_play(cards)
+    print "Best play:"
+    play.pp(best_p)
+    print "Best score:", best_score
 

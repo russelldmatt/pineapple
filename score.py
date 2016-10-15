@@ -159,8 +159,8 @@ def top_pair_scores(cards):
     return max(0, highest_pair_value(cards) - 5)
     
 top_scores = { 
-    Hand.Trips : lambda cards: top_trip_scores(cards),
-    Hand.Pair : lambda cards: top_pair_scores(cards),
+    Hand.Trips : top_trip_scores,
+    Hand.Pair : top_pair_scores,
 }
 
 def score_simple(cards, score_map):
