@@ -37,6 +37,8 @@ def test_fantasy_land():
 
     # override
     cards_human = ['As', 'Ah', 'Ad', 'Kh', 'Js', '10h', '9c', '9d', '8c', '7s', '7c', '6s', '4s', '4d'] 
+    cards_human = ['Ah', 'Ad', 'Qh', 'Jd', '10c', '10d', '9s', '8d', '7h', '5s', '4c', '3c', '2s', '2d']
+
     cards = [ card.of_human(c) for c in cards_human ]
 
     print "Testing fantasy_land best play:"
@@ -46,3 +48,4 @@ def test_fantasy_land():
     play.pp(best_p)
     print "Best score:", best_score
 
+# test_fantasy_land()

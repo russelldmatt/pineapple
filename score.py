@@ -128,8 +128,8 @@ def compare_hands(cards1, cards2):
     else: 
         assert(False)
 
-def is_better(cards, than_cards):
-    return compare_hands(cards, than_cards) > 0
+def hand_is_better(cards, than):
+    return compare_hands(cards, than) > 0
 
 bottom_scores = { 
     Hand.RoyalFlush : 25,
